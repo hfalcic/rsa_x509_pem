@@ -1,5 +1,5 @@
 # ASN.1 "useful" types
-from . import char, tag
+from pyasn1.type import char, tag
 
 class GeneralizedTime(char.VisibleString):
     tagSet = char.VisibleString.tagSet.tagImplicitly(

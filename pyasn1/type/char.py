@@ -1,10 +1,11 @@
 # ASN.1 "character string" types
-from . import univ, tag
+from pyasn1.type import univ, tag
 
 class UTF8String(univ.OctetString):
     tagSet = univ.OctetString.tagSet.tagImplicitly(
         tag.Tag(tag.tagClassUniversal, tag.tagFormatSimple, 12)
         )
+    encoding = "utf-8"
 
 class NumericString(univ.OctetString):
     tagSet = univ.OctetString.tagSet.tagImplicitly(
@@ -20,6 +21,7 @@ class TeletexString(univ.OctetString):
     tagSet = univ.OctetString.tagSet.tagImplicitly(
         tag.Tag(tag.tagClassUniversal, tag.tagFormatSimple, 20)
         )
+    
 
 class VideotexString(univ.OctetString):
     tagSet = univ.OctetString.tagSet.tagImplicitly(
@@ -50,8 +52,10 @@ class UniversalString(univ.OctetString):
     tagSet = univ.OctetString.tagSet.tagImplicitly(
         tag.Tag(tag.tagClassUniversal, tag.tagFormatSimple, 28)
         )
+    encoding = "utf-32-be"
 
 class BMPString(univ.OctetString):
     tagSet = univ.OctetString.tagSet.tagImplicitly(
         tag.Tag(tag.tagClassUniversal, tag.tagFormatSimple, 30)
         )
+    encoding = "utf-16-be"
