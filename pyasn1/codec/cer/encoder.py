@@ -1,7 +1,7 @@
 # CER encoder
-from pyasn1.type import univ
-from pyasn1.codec.ber import encoder
-from pyasn1.compat.octets import int2oct, null
+from ...type import univ
+from ..ber import encoder
+from ...compat.octets import int2oct, null
 
 class BooleanEncoder(encoder.IntegerEncoder):
     def encodeValue(self, encodeFun, client, defMode, maxChunkSize):

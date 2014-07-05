@@ -1,8 +1,8 @@
 # BER encoder
-from pyasn1.type import base, tag, univ, char, useful
-from pyasn1.codec.ber import eoo
-from pyasn1.compat.octets import int2oct, oct2int, ints2octs, null, str2octs
-from pyasn1 import debug, error
+from ...type import base, tag, univ, char, useful
+from ..ber import eoo
+from ...compat.octets import int2oct, oct2int, ints2octs, null, str2octs
+from ... import debug, error
 
 class Error(Exception): pass
 
@@ -46,7 +46,7 @@ class AbstractItemEncoder:
             return null
         else:
             return encodeFun(eoo.endOfOctets, defMode)
-        
+
     def encode(self, encodeFun, value, defMode, maxChunkSize):
         substrate, isConstructed = self.encodeValue(
             encodeFun, value, defMode, maxChunkSize
@@ -154,10 +154,10 @@ class NullEncoder(AbstractItemEncoder):
 class ObjectIdentifierEncoder(AbstractItemEncoder):
     supportIndefLenMode = 0
     precomputedValues = {
-        (1, 3, 6, 1, 2): (43, 6, 1, 2),        
+        (1, 3, 6, 1, 2): (43, 6, 1, 2),
         (1, 3, 6, 1, 4): (43, 6, 1, 4)
         }
-    def encodeValue(self, encodeFun, value, defMode, maxChunkSize):    
+    def encodeValue(self, encodeFun, value, defMode, maxChunkSize):
         oid = value.asTuple()
         if oid[:5] in self.precomputedValues:
             octets = self.precomputedValues[oid[:5]]
@@ -189,10 +189,10 @@ class ObjectIdentifierEncoder(AbstractItemEncoder):
                 subid = subid >> 7
                 while subid > 0:
                     res = (0x80 | (subid & 0x7f),) + res
-                    subid = subid >> 7 
+                    subid = subid >> 7
                 # Add packed Sub-Object ID to resulted Object ID
                 octets += res
-                
+
         return ints2octs(octets), 0
 
 class RealEncoder(AbstractItemEncoder):
@@ -309,7 +309,7 @@ tagMap = {
     char.BMPString.tagSet: OctetStringEncoder(),
     # useful types
     useful.GeneralizedTime.tagSet: OctetStringEncoder(),
-    useful.UTCTime.tagSet: OctetStringEncoder()        
+    useful.UTCTime.tagSet: OctetStringEncoder()
     }
 
 # Type-to-codec map for ambiguous ASN.1 types
