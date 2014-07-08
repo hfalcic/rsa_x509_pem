@@ -282,18 +282,21 @@ class TestTop(unittest.TestCase):
 
   def test_rsa_parse(self):
     self.assertEqual(top.rsa_parse, rsa_pem.parse)
-    data = open(KEY_FILE_PAIRS[0][0]).read()
+    with open(KEY_FILE_PAIRS[0][0]) as d:
+      data = d.read()
     rsa_dict = top.parse(data)
     self.assertTrue(rsa_dict)
 
   def test_x509_parse(self):
     self.assertEqual(top.x509_parse, x509_pem.parse)
-    data = open(KEY_FILE_PAIRS[0][1]).read()
+    with open(KEY_FILE_PAIRS[0][1]) as d:
+      data = d.read()
     x509_dict = top.parse(data)
     self.assertTrue(x509_dict)
 
   def test_rsa_dict_to_key(self):
-    data = open(KEY_FILE_PAIRS[0][0]).read()
+    with open(KEY_FILE_PAIRS[0][0]) as d:
+      data = d.read()
     rsa_dict = top.parse(data)
     key = top.get_key(rsa_dict)
     self.assertTrue(key)
@@ -301,7 +304,8 @@ class TestTop(unittest.TestCase):
     self.assertTrue(key.d)
 
   def test_x509_dict_to_key(self):
-    data = open(KEY_FILE_PAIRS[0][1]).read()
+    with open(KEY_FILE_PAIRS[0][1]) as d:
+      data = d.read()
     x509_dict = top.parse(data)
     key = top.get_key(x509_dict)
     self.assertTrue(key)
@@ -315,8 +319,10 @@ class TestTop(unittest.TestCase):
 class TestFunctionWrappers(unittest.TestCase):
 
   def setUp(self):
-    self.pubkey = top.get_key(top.parse(open(KEY_FILE_PAIRS[0][1]).read()))
-    self.privkey = top.get_key(top.parse(open(KEY_FILE_PAIRS[0][0]).read()))
+    with open(KEY_FILE_PAIRS[0][1]) as pub:
+      self.pubkey = top.get_key(top.parse(pub.read()))
+    with open(KEY_FILE_PAIRS[0][0]) as priv:
+      self.privkey = top.get_key(top.parse(priv.read()))
 
   def test_public(self):
     f_my_public = top.f_public(self.pubkey)
