@@ -4,10 +4,10 @@
 # andrewyates.name@gmail.com
 """Package module into well organized interface.
 """
-from .Crypto.PublicKey import RSA
+from Crypto.PublicKey import RSA
 
-from . import rsa_pem
-from . import x509_pem
+import rsa_pem
+import x509_pem
 
 # *_parse accepts file data to be parsed as a single parameter
 # >>> key_dict = rsa_parse(open("my_key.pem").read())

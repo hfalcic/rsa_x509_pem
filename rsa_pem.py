@@ -23,10 +23,12 @@ pyasn1
 "ASN.1 tools for Python"
 http://pyasn1.sourceforge.net/
 """
-from .pyasn1.type import univ, namedtype, namedval, constraint
-from .pyasn1.codec.der import encoder, decoder
+import base64
 
-from .sequence_parser import SequenceParser
+from pyasn1.type import univ, namedtype, namedval, constraint
+from pyasn1.codec.der import encoder, decoder
+
+from sequence_parser import SequenceParser
 
 MAX = 16
 
@@ -79,6 +81,8 @@ def parse(data, password=None):
       ['body'] = str of key DER binary in base64
       ['type'] = str of "RSA PRIVATE"
   """
+  if isinstance(data, str):
+    data = data.encode('utf-8')
   lines = []
   type = None
   encryption = False
@@ -103,16 +107,16 @@ def parse(data, password=None):
       # include this b64 data for decoding
       lines.append(s.strip())
 
-  body = ''.join(lines)
-  raw_data = body.decode("base64")
+  body = b''.join(lines)
+  raw_data = base64.b64decode(body)
 
   # Private Key cipher (Not Handled)
   if encryption:
-    raise NotImplementedError(\
+    raise NotImplementedError(
       "Symmetric encryption is not supported. DEK-Info: %s" % encryption)
 
   # decode data string using RSA
-  if type == 'RSA':
+  if type == b'RSA':
     asn1Spec = RSAPrivateParser()
   else:
     raise NotImplementedError("Only RSA is supported. Type was %s." % type)

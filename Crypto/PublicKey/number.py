@@ -153,25 +153,18 @@ def long_to_bytes(n, blocksize=0):
     blocksize.
     """
     # after much testing, this algorithm was deemed to be the fastest
-    s = ''
+    s = b''
     n = int(n)
     pack = struct.pack
     while n > 0:
         s = pack('>I', n & 0xffffffff) + s
-        n = n >> 32
+        n >>= 32
     # strip off leading zeros
-    for i in range(len(s)):
-        if s[i] != '\000':
-            break
-    else:
-        # only happens when n == 0
-        s = '\000'
-        i = 0
-    s = s[i:]
+    s = s.lstrip(b'\x00') or b'\x00'
     # add back some pad bytes.  this could be done more efficiently w.r.t. the
     # de-padding being done above, but sigh...
     if blocksize > 0 and len(s) % blocksize:
-        s = (blocksize - len(s) % blocksize) * '\000' + s
+        s = (blocksize - len(s) % blocksize) * b'\000' + s
     return s
 
 def bytes_to_long(s):
@@ -185,8 +178,8 @@ def bytes_to_long(s):
     length = len(s)
     if length % 4:
         extra = (4 - length % 4)
-        s = '\000' * extra + s
-        length = length + extra
+        s = b'\000' * extra + s
+        length += extra
     for i in range(0, length, 4):
         acc = (acc << 32) + unpack('>I', s[i:i+4])[0]
     return acc

@@ -35,13 +35,15 @@ X500email
 "1.2.840.113549.1.9.1 - e-mailAddress"
 http://www.alvestrand.no/objectid/1.2.840.113549.1.9.1.html
 """
+import base64
+import binascii
 import re
 
-from .pyasn1.type import tag,namedtype,namedval,univ,constraint,char,useful
-from .pyasn1.codec.der import decoder, encoder
-from .pyasn1 import error
+from pyasn1.type import tag,namedtype,namedval,univ,constraint,char,useful
+from pyasn1.codec.der import decoder, encoder
+from pyasn1 import error
 
-from .sequence_parser import SequenceParser
+from sequence_parser import SequenceParser
 
 
 MAX = 64
@@ -50,7 +52,7 @@ CERT_FILE = "keys/cacert_pass_helloworld.pem"
 RSA_ID = "1.2.840.113549.1.1.1"
 RSA_SHA1_ID = "1.2.840.113549.1.1.5"
 
-RX_PUBLIC_KEY = re.compile("subjectPublicKey='([01]+)'B")
+RX_PUBLIC_KEY = re.compile("subjectPublicKey=(?:\")?'([01]+)'(?:\")?B")
 RX_SUBJECT = re.compile(" +subject=Name:.*?\n\n\n", re.M | re.S)
 RX_SUBJECT_ATTR = re.compile("""
 RelativeDistinguishedName:.*?
@@ -103,7 +105,7 @@ class Name(univ.Choice):
   componentType = namedtype.NamedTypes(
     namedtype.NamedType('', RDNSequence())
     )
-                          
+
 class AlgorithmIdentifier(univ.Sequence):
   componentType = namedtype.NamedTypes(
     namedtype.NamedType('algorithm', univ.ObjectIdentifier()),
@@ -134,7 +136,7 @@ class Time(univ.Choice):
     namedtype.NamedType('utcTime', useful.UTCTime()),
     namedtype.NamedType('generalTime', useful.GeneralizedTime())
     )
-    
+
 class Validity(univ.Sequence):
   componentType = namedtype.NamedTypes(
     namedtype.NamedType('notBefore', Time()),
@@ -177,7 +179,7 @@ class Certificate(univ.Sequence):
     Returns:
       {str, value} where `value` is simple type like `long`
     """
-    dict = {}
+    cdict = {}
 
     # hack directly from prettyPrint
     # we just want to verify that this is RSA-SHA1 and get the public key
@@ -186,19 +188,24 @@ class Certificate(univ.Sequence):
       raise NotImplementedError("Only RSA-SHA1 X509 certificates are supported.")
     # rip out public key binary
     bits = RX_PUBLIC_KEY.search(text).group(1)
-    binhex = hex(int(bits, 2))[2:-1]
-    bin = binhex.decode("hex")
+
+    bits = RX_PUBLIC_KEY.search(text).group(1)
+
+    # 'hex' produces a string with a 0x prefix and, on Python 2, a 'L' suffix.
+    # Strip these.
+    binhex = hex(int(bits, 2))[2:].rstrip('L')
+    bin = binascii.unhexlify(binhex)
 
     # Get X509SubjectName string
     # fake this for now; generate later using RX
-    dict['subject'] = 'SubjectName'
+    cdict['subject'] = 'SubjectName'
 
     # reparse RSA Public Key PEM binary
     pubkey = RSAPublicKey()
     key = decoder.decode(bin, asn1Spec=pubkey)[0]
-    dict.update(key.dict())
-    
-    return dict
+    cdict.update(key.dict())
+
+    return cdict
 
 
 class RSAPublicKey(SequenceParser):
@@ -228,7 +235,7 @@ def rfc2253_name(map):
   name = ','.join(pairs)
   return name
 
-  
+
 def parse(data):
   """Return elements from parsed X509 certificate data.
 
@@ -242,52 +249,57 @@ def parse(data):
       ['body'] = str of X509 DER binary in base64
       ['type'] = str of "X509 PRIVATE"
   """
+  if isinstance(data, str):
+    data = data.encode('utf-8')
+
   # initialize empty return dictionary
-  dict = {}
-  
+  cdict = {}
+
   lines = []
   for s in data.splitlines():
-    if '-----' == s[:5] and "BEGIN" in s:
-      if not "CERTIFICATE" in s:
-        raise NotImplementedError(\
+    if b'-----' == s[:5] and b"BEGIN" in s:
+      if b"CERTIFICATE" not in s:
+        raise NotImplementedError(
           "Only PEM Certificates are supported. Header: %s", s)
     else:
       # include this b64 data for decoding
       lines.append(s.strip())
 
 
-  body = ''.join(lines)
-  raw_data = body.decode("base64")
+  body = b''.join(lines)
+  raw_data = base64.b64decode(body)
 
   cert = decoder.decode(raw_data, asn1Spec=Certificate())[0]
 
   # dump parsed PEM data to text
   text = cert.prettyPrint()
-  
+
   # GET RSA KEY
   # ===========
-  if not (RSA_ID in text):
+  if RSA_ID not in text:
     raise NotImplementedError("Only RSA X509 certificates are supported.")
   # rip out RSA public key binary
   key_bits = RX_PUBLIC_KEY.search(text).group(1)
-  key_binhex = hex(int(key_bits, 2))[2:-1]
-  key_bin = key_binhex.decode("hex")
+  # 'hex' produces a string with a 0x prefix and, on Python 2, a 'L' suffix.
+  # Strip these.
+  key_binhex = hex(int(key_bits, 2)).lstrip('0x').rstrip('L')
+  key_bin = base64.b16decode(key_binhex.upper())
   # reparse RSA Public Key PEM binary
   key = decoder.decode(key_bin, asn1Spec=RSAPublicKey())[0]
   # add RSA key elements to return dictionary
-  dict.update(key.dict())
+  cdict.update(key.dict())
 
   # GET CERTIFICATE SUBJECT
   # =======================
   subject_text = RX_SUBJECT.search(text).group(0)
   attrs = RX_SUBJECT_ATTR.findall(subject_text)
-  dict['subject'] = rfc2253_name(attrs)
+  cdict['subject'] = rfc2253_name(attrs)
 
   # add base64 encoding and type to return dictionary
-  dict['body'] = body
-  dict['type'] = "X509 CERTIFICATE"
+  cdict['body'] = body
+  cdict['type'] = "X509 CERTIFICATE"
 
-  return dict
+  return cdict
 
 
 def dict_to_tuple(dict):
@@ -298,8 +310,7 @@ def dict_to_tuple(dict):
   Returns:
     tuple of (int) of RSA public key integers for PyCrypto key construction
   """
-  tuple = (
+  return (
     dict['modulus'],
     dict['publicExponent'],
-    )
-  return tuple
+  )

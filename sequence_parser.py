@@ -4,7 +4,7 @@
 # andrewyates.name@gmail.com
 """Self-descriptive PEM decoder for 'univ.Sequence'.
 """
-from .pyasn1.type import univ
+from pyasn1.type import univ
 
 
 class SequenceParser(univ.Sequence):
@@ -23,12 +23,12 @@ class SequenceParser(univ.Sequence):
     Returns:
       {str, value} where `value` is simple type like `long`
     """
-    dict = {}
+    d = {}
     for i in range(len(self._componentValues)):
       if self._componentValues[i] is not None:
         componentType = self.getComponentType()
         if componentType is not None:
           name = componentType.getNameByPosition(i)
           value = self._componentValues[i]._value
-          dict[name] = value
-    return dict
+          d[name] = value
+    return d

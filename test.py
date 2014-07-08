@@ -6,61 +6,65 @@
 """
 import unittest
 
-from .Crypto.PublicKey import RSA
+import six
 
-from . import rsa_pem
-from . import x509_pem
-from . import __init__ as top
+from Crypto.PublicKey import RSA
+
+import rsa_pem
+import x509_pem
+import __init__ as top
 
 
 KEY_FILE_PAIRS = (
-  ('keys/privkey_1_rsa_512.pem', 'keys/rsa_cert_1_512.pem'),
-  ('keys/privkey_1_rsa_1024.pem', 'keys/rsa_cert_1_1024.pem'),
-  ('keys/privkey_1_rsa_2048.pem', 'keys/rsa_cert_1_2048.pem'),
+    ('keys/privkey_1_rsa_512.pem', 'keys/rsa_cert_1_512.pem'),
+    ('keys/privkey_1_rsa_1024.pem', 'keys/rsa_cert_1_1024.pem'),
+    ('keys/privkey_1_rsa_2048.pem', 'keys/rsa_cert_1_2048.pem'),
 )
 
 RSA_PARTS = (
-  ('version', int),
-  ('modulus', int),
-  ('publicExponent', int),
-  ('privateExponent', int),
-  ('prime1', int),
-  ('prime2', int),
-  ('exponent1', int),
-  ('exponent2', int),
-  ('coefficient', int),
-  ('body', str),
-  ('type', str),
+    ('version', six.integer_types),
+    ('modulus', six.integer_types),
+    ('publicExponent', six.integer_types),
+    ('privateExponent', six.integer_types),
+    ('prime1', six.integer_types),
+    ('prime2', six.integer_types),
+    ('exponent1', six.integer_types),
+    ('exponent2', six.integer_types),
+    ('coefficient', six.integer_types),
+    ('body', bytes),
+    ('type', str),
   )
 
 X509_PARTS = (
-  ('modulus', int),
-  ('publicExponent', int),
-  ('subject', str),
-  ('body', str),
-  ('type', str),
+    ('modulus', six.integer_types),
+    ('publicExponent', six.integer_types),
+    ('subject', six.text_type),
+    ('body', bytes),
+    ('type', str),
   )
 
 X509_SUBJECT = "C=US,ST=Ohio,L=Columbus,CN=Andrew Yates,O=http://github.com/andrewdyates"
 
-MSG1 = "Hello, World!"
-MSG2 = "This is a test message to sign."
+MSG1 = b"Hello, World!"
+MSG2 = b"This is a test message to sign."
 MSG_LONG = "I dedicate this essay to the two-dozen-odd people whose refutations of Cantor’s diagonal argument have come to me either as referee or as editor in the last twenty years or so. Sadly these submissions were all quite unpublishable; I sent them back with what I hope were helpful comments. A few years ago it occurred to me to wonder why so many people devote so much energy to refuting this harmless little argument — what had it done to make them angry with it? So I started to keep notes of these papers, in the hope that some pattern would emerge. These pages report the results."
+if six.PY3:
+    MSG_LONG = MSG_LONG.encode('utf-8')
 
 DUMMY_SIG = (1234567890,)
 
 
 class TestParse(unittest.TestCase):
   """Test parsing PEM formats into labeled dictionaries."""
-  
+
   def setUp(self):
     self.data = {}
     for key, cert in KEY_FILE_PAIRS:
-      with open(key, "r") as f:
+      with open(key, "rb") as f:
         self.data[key] = f.read()
-      with open(cert, "r") as f:
+      with open(cert, "rb") as f:
         self.data[cert] = f.read()
-    
+
   def test_key_parse(self):
     for key, cert in KEY_FILE_PAIRS:
       data = self.data[key]
@@ -101,7 +105,7 @@ class TestParse(unittest.TestCase):
 
 class TestGenKey(unittest.TestCase):
   """Test RSA Keys from parameters parsed from file."""
-  
+
   def setUp(self):
     self.dicts = {}
     for key, cert in KEY_FILE_PAIRS:
@@ -111,7 +115,7 @@ class TestGenKey(unittest.TestCase):
       with open(cert, "r") as f:
         data = f.read()
         self.dicts[cert] = x509_pem.parse(data)
-        
+
   def test_rsa_tuple_generation(self):
     for key, cert in KEY_FILE_PAIRS:
       rsa_dict = self.dicts[key]
@@ -142,10 +146,10 @@ class TestGenKey(unittest.TestCase):
       self.assertTrue(x509_key)
       self.assertEqual(x509_key.e, 65537)
 
-      
+
 class TestRSAKey(unittest.TestCase):
   """Test correct operation of RSA keys generated from key files."""
-  
+
   def setUp(self):
     self.keys = {}
 
@@ -269,19 +273,19 @@ class TestRSAKey(unittest.TestCase):
     try:
       plain = key.decrypt(cipher)
     except Exception as e:
-      self.assertTrue("Ciphertext too large" in e, e)
+      self.assertTrue("Ciphertext too large" in str(e), e)
     else:
       self.assertNotEqual(MSG1, plain)
 
 
 class TestTop(unittest.TestCase):
-  
+
   def test_rsa_parse(self):
     self.assertEqual(top.rsa_parse, rsa_pem.parse)
     data = open(KEY_FILE_PAIRS[0][0]).read()
     rsa_dict = top.parse(data)
     self.assertTrue(rsa_dict)
-    
+
   def test_x509_parse(self):
     self.assertEqual(top.x509_parse, x509_pem.parse)
     data = open(KEY_FILE_PAIRS[0][1]).read()
@@ -295,7 +299,7 @@ class TestTop(unittest.TestCase):
     self.assertTrue(key)
     self.assertTrue(key.e)
     self.assertTrue(key.d)
-  
+
   def test_x509_dict_to_key(self):
     data = open(KEY_FILE_PAIRS[0][1]).read()
     x509_dict = top.parse(data)
@@ -335,7 +339,7 @@ class TestFunctionWrappers(unittest.TestCase):
     self.assertNotEqual(MSG1, f_my_public(f_my_public(MSG1)))
     self.assertNotEqual(MSG1, f_my_private(f_my_private(MSG1)))
 
-      
+
 def main():
   unittest.main()
 
