@@ -12,7 +12,7 @@ source code example "pyasn1/examples/x509.py" [pyasn1].
 
 USE:
 
->>> data = open("cert.pem").read()
+>>> with open("cert.pem", "rb") as cf: data = cf.read()
 ... dict = x509_pem.parse(data)
 ... n, e = dict['modulus'], dict['publicExponent']
 ... subject = dict['subject']

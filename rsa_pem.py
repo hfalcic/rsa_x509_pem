@@ -11,7 +11,7 @@ source code example "pyasn1/examples/sshkey.py" [pyasn1].
 
 USE:
 
->>> data = open("cert.pem").read()
+>>> with open("cert.pem", "rb") as cf: data = cf.read()
 ... dict = rsa_pem.parse(data)
 ... n = dict['modulus']
 ... e = dict['publicExponent']

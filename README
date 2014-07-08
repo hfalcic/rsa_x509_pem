@@ -14,24 +14,24 @@ See test.py for unit tests and additional sample usage.
 SAMPLE USE:
 
 # Read "private_rsa_key.pem", make private RSA key, sign something, verify
->>> data = open("private_rsa_key.pem").read()
+>>> with open("private_rsa_key.pem", "rb") as kf: data = kf.read()
 ... key_dict = parse(data)
 ... key = get_key(key_dict)
-... signature = key.sign("Hello.", None)
-... assert key.verify("Hello.", signature)
+... signature = key.sign(b"Hello.", None)
+... assert key.verify(b"Hello.", signature)
 
 # Read "rsa_cert.pem", make public RSA key, verify some signature, print
->>> data = open("rsa_cert.pem").read()
+>>> with open("rsa_cert.pem", "rb") as cf: data = cf.read()
 ... cert_dict = parse(data)
 ... key = get_key(cert_dict)
-... assert key.verify("Hello.", my_signature)
+... assert key.verify(b"Hello.", my_signature)
 ... print cert_dict["subject"]
 ... print cert_dict["body"]
 
 # Return "nice" public and private key functions from a key object
 >>> f_my_public = f_public(key)
 ... f_my_private = f_private(key)
-... msg = "hello"
+... msg = b"hello"
 ... assert msg == f_my_public(f_my_public(msg))
 ... assert msg == f_my_private(f_my_public(msg))
 
