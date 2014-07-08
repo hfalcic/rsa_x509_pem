@@ -37,11 +37,11 @@ http://www.alvestrand.no/objectid/1.2.840.113549.1.9.1.html
 """
 import re
 
-from pyasn1.type import tag,namedtype,namedval,univ,constraint,char,useful
-from pyasn1.codec.der import decoder, encoder
-from pyasn1 import error
+from .pyasn1.type import tag,namedtype,namedval,univ,constraint,char,useful
+from .pyasn1.codec.der import decoder, encoder
+from .pyasn1 import error
 
-from sequence_parser import SequenceParser
+from .sequence_parser import SequenceParser
 
 
 MAX = 64

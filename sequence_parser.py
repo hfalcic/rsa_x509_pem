@@ -4,7 +4,7 @@
 # andrewyates.name@gmail.com
 """Self-descriptive PEM decoder for 'univ.Sequence'.
 """
-from pyasn1.type import univ
+from .pyasn1.type import univ
 
 
 class SequenceParser(univ.Sequence):

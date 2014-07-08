@@ -6,11 +6,11 @@
 """
 import unittest
 
-from Crypto.PublicKey import RSA
+from .Crypto.PublicKey import RSA
 
-import rsa_pem
-import x509_pem
-import __init__ as top
+from . import rsa_pem
+from . import x509_pem
+from . import __init__ as top
 
 
 KEY_FILE_PAIRS = (
@@ -20,25 +20,25 @@ KEY_FILE_PAIRS = (
 )
 
 RSA_PARTS = (
-  ('version', long),
-  ('modulus', long),
-  ('publicExponent', long),
-  ('privateExponent', long),
-  ('prime1', long),
-  ('prime2', long),
-  ('exponent1', long),
-  ('exponent2', long),
-  ('coefficient', long),
-  ('body', basestring),
-  ('type', basestring),
+  ('version', int),
+  ('modulus', int),
+  ('publicExponent', int),
+  ('privateExponent', int),
+  ('prime1', int),
+  ('prime2', int),
+  ('exponent1', int),
+  ('exponent2', int),
+  ('coefficient', int),
+  ('body', str),
+  ('type', str),
   )
 
 X509_PARTS = (
-  ('modulus', long),
-  ('publicExponent', long),
-  ('subject', basestring),
-  ('body', basestring),
-  ('type', basestring),
+  ('modulus', int),
+  ('publicExponent', int),
+  ('subject', str),
+  ('body', str),
+  ('type', str),
   )
 
 X509_SUBJECT = "C=US,ST=Ohio,L=Columbus,CN=Andrew Yates,O=http://github.com/andrewdyates"
@@ -268,7 +268,7 @@ class TestRSAKey(unittest.TestCase):
     cipher = cert.encrypt(MSG1, None)
     try:
       plain = key.decrypt(cipher)
-    except Exception, e:
+    except Exception as e:
       self.assertTrue("Ciphertext too large" in e, e)
     else:
       self.assertNotEqual(MSG1, plain)

@@ -23,14 +23,14 @@ pyasn1
 "ASN.1 tools for Python"
 http://pyasn1.sourceforge.net/
 """
-from pyasn1.type import univ, namedtype, namedval, constraint
-from pyasn1.codec.der import encoder, decoder
+from .pyasn1.type import univ, namedtype, namedval, constraint
+from .pyasn1.codec.der import encoder, decoder
 
-from sequence_parser import SequenceParser
+from .sequence_parser import SequenceParser
 
 MAX = 16
 
-  
+
 class RSAPrivateParser(SequenceParser):
   """PKCS#1 compliant RSA private key structure.
   """
@@ -85,19 +85,19 @@ def parse(data, password=None):
   # read in key lines from keydata string
   for s in data.splitlines():
     # skip file headers
-    if '-----' == s[:5] and "BEGIN" in s:
+    if b'-----' == s[:5] and b"BEGIN" in s:
       # Detect RSA or DSA keys
-      if "RSA" in s:
-        type = "RSA"
-      elif "DSA" in s:
-        type = "DSA"
+      if b"RSA" in s:
+        type = b"RSA"
+      elif b"DSA" in s:
+        type = b"DSA"
       else:
-        type = s.replace("-----", "")
+        type = s.replace(b"-----", b"")
 
     # skip cryptographic headers
-    elif ":" in s or " " in s:
+    elif b":" in s or b" " in s:
       # detect encryption, if any
-      if "DEK-Info: " == s[0:10]:
+      if b"DEK-Info: " == s[0:10]:
         encryption = s[10:]
     else:
       # include this b64 data for decoding
@@ -110,13 +110,13 @@ def parse(data, password=None):
   if encryption:
     raise NotImplementedError(\
       "Symmetric encryption is not supported. DEK-Info: %s" % encryption)
-  
+
   # decode data string using RSA
   if type == 'RSA':
     asn1Spec = RSAPrivateParser()
   else:
     raise NotImplementedError("Only RSA is supported. Type was %s." % type)
-  
+
   key = decoder.decode(raw_data, asn1Spec=asn1Spec)[0]
 
   # generate return dict base from key dict
